@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        h3 {
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        #transactionList {
+            resize: none;
+        }
+
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <h3>Expense Tracker</h3>
+
+            <div class="form-group">
+                <label for="text">Text:</label>
+                <input type="text" class="form-control" id="text">
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount:</label>
+                <input type="text" class="form-control" id="amount">
+            </div>
+
+            <button class="btn btn-primary" onclick="addTransaction()">Add Expense</button>
+            <button class="btn btn-secondary" onclick="clearFields()">Clear</button>
+            <button class="btn btn-danger" onclick="exitApp()">Exit</button>
+            <button class="btn btn-warning" onclick="clearHistory()">Clear History</button>
+        </div>
+
+        <div class="col-md-8">
+            <h3>Balance Overview</h3>
+
+            <div class="row">
+                <div class="col">
+                    <label for="balance">Balance:</label>
+                    <span id="balance" class="font-weight-bold">Balance: $0.00</span>
+                </div>
+                <div class="col">
+                    <label for="money_plus">Income:</label>
+                    <span id="money_plus" class="font-weight-bold">Income: $0.00</span>
+                </div>
+                <div class="col">
+                    <label for="money_minus">Expense:</label>
+                    <span id="money_minus" class="font-weight-bold">Expense: $0.00</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="transactionList">Transaction History:</label>
+                <textarea id="transactionList" class="form-control" rows="6" wrap="word" disabled></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS and Popper.js -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<script>
+    let transactions = [];
+    let allow = true;
+
+    function generateId() {
+        return Math.floor(Math.random() * 1000000000) + 1;
+    }
+
+    function addTransaction() {
+        const textInput = document.getElementById("text").value.trim();
+        const amountInput = document.getElementById("amount").value.trim();
+
+        if (textInput === '' || amountInput === '') {
+            alert('Please add text and amount');
+        } else {
+            const transaction = {
+                id: generateId(),
+                text: textInput,
+                amount: parseFloat(amountInput)
+            };
+
+            transactions.push(transaction);
+            addTransactionToDOM(transaction);
+            updateValues();
+            updateLocalStorage();
+            document.getElementById("text").value = '';
+            document.getElementById("amount").value = '';
+        }
+    }
+
+    function addTransactionToDOM(transaction) {
+        const sign = transaction.amount < 0 ? "-" : "+";
+        const item = `${transaction.text} ${sign}${Math.abs(transaction.amount)}\n`;
+        document.getElementById("transactionList").value += item;
+    }
+
+    function updateValues() {
+        const amounts = transactions.map(transaction => transaction.amount);
+        const total = roundToTwoDecimal(sumArray(amounts));
+        const income = roundToTwoDecimal(sumArray(amounts.filter(x => x > 0)));
+        const expense = roundToTwoDecimal(Math.abs(sumArray(amounts.filter(x => x < 0))));
+
+        document.getElementById("balance").innerText = `Balance: $${total}`;
+        document.getElementById("money_plus").innerText = `Income: $${income}`;
+        document.getElementById("money_minus").innerText = `Expense: $${expense}`;
+    }
+
+    function clearFields() {
+        document.getElementById("text").value = '';
+        document.getElementById("amount").value = '';
+        allow = true;
+    }
+
+    function updateLocalStorage() {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function loadTransactions() {
+        const storedTransactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+        for (const transaction of storedTransactions) {
+            addTransactionToDOM(transaction);
+        }
+
+        transactions = storedTransactions;
+        updateValues();
+    }
+
+    function exitApp() {
+        // You can perform any cleanup or additional actions before closing the app
+        window.close();
+    }
+
+    function clearHistory() {
+        transactions = [];
+        document.getElementById("transactionList").value = "";
+        updateValues();
+        updateLocalStorage();
+    }
+
+    function roundToTwoDecimal(value) {
+        return Math.round(value * 100) / 100;
+    }
+
+    function sumArray(arr) {
+        return arr.reduce((acc, val) => acc + val, 0);
+    }
+
+    // Load transactions from local storage when the page is loaded
+    window.onload = loadTransactions;
+</script>
+
+</body>
+</html>

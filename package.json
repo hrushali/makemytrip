@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@google-cloud/translate": "^8.0.2",
+    "@vitalets/google-translate-api": "^9.2.0",
+    "google-translate-api": "^2.3.0",
+    "translate-google-api": "^1.0.4"
+  }
+}
